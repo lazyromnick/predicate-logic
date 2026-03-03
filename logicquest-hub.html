@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LogicQuest — Predicate Logic Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+:root {
+  --bg:#f0f4ff;
+  --surface:#e8edf8;
+  --card:#ffffff;
+  --border:#dde3f0;
+  --border2:#c8d0e8;
+  --text:#1a1d2e;
+  --muted:#8890aa;
+  --muted2:#6670888;
+  --build:#0284c7;
+  --build-lt:#e0f2fe;
+  --build-dim:rgba(2,132,199,0.08);
+  --build-glow:rgba(2,132,199,0.18);
+  --chain:#7c3aed;
+  --chain-lt:#ede9fe;
+  --chain-dim:rgba(124,58,237,0.08);
+  --chain-glow:rgba(124,58,237,0.18);
+  --green:#059669;
+  --green-lt:#d1fae5;
+  --red:#dc2626;
+  --red-lt:#fee2e2;
+  --yellow:#d97706;
+  --yellow-lt:#fef3c7;
+  --orange:#ea580c;
+  --shadow:rgba(100,116,139,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:var(--bg);
+  font-family:'DM Sans',sans-serif;
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(2,132,199,0.06) 0%,transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(124,58,237,0.06) 0%,transparent 50%);
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(2,132,199,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(2,132,199,0.04) 1px,transparent 1px);
+  background-size:52px 52px;
+  mask-image:radial-gradient(ellipse at center,black 20%,transparent 75%);
+}
+
+.screen{display:none;}
+.screen.active{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:24px 16px;}
+
+/* ===================== HUB ===================== */
+#hub{justify-content:center;}
+.hub-header{text-align:center;margin-bottom:44px;}
+.hub-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:0.68rem;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:16px;
+  padding:5px 14px;border:1px solid var(--border2);border-radius:50px;
+  background:var(--card);
+}
+.hub-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(3rem,10vw,6rem);
+  font-weight:800;line-height:0.95;letter-spacing:-0.03em;margin-bottom:12px;
+}
+.hub-title .t1{color:var(--build);}
+.hub-title .t2{color:var(--text);}
+.hub-title .t3{color:var(--chain);}
+.hub-sub{font-size:0.92rem;font-weight:500;color:var(--muted);max-width:380px;margin:0 auto;line-height:1.65;}
+
+.game-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:640px;width:100%;margin-bottom:24px;}
+@media(max-width:520px){.game-cards{grid-template-columns:1fr;}}
+
+.game-card{
+  background:var(--card);border:2px solid var(--border);
+  border-radius:20px;padding:28px 22px;
+  cursor:pointer;transition:all 0.25s;
+  position:relative;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 2px 12px var(--shadow);
+}
+.game-card:hover{transform:translateY(-5px);}
+.build-gcard:hover{border-color:rgba(2,132,199,0.5);box-shadow:0 8px 30px var(--build-glow);}
+.chain-gcard:hover{border-color:rgba(124,58,237,0.5);box-shadow:0 8px 30px var(--chain-glow);}
+
+.card-stripe{height:3px;border-radius:3px;margin-bottom:20px;}
+.build-gcard .card-stripe{background:linear-gradient(90deg,var(--build),#38bdf8);}
+.chain-gcard .card-stripe{background:linear-gradient(90deg,var(--chain),#a78bfa);}
+
+.card-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:14px;}
+.build-gcard .card-icon{background:var(--build-lt);color:var(--build);}
+.chain-gcard .card-icon{background:var(--chain-lt);color:var(--chain);}
+.card-name{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:8px;}
+.build-gcard .card-name{color:var(--build);}
+.chain-gcard .card-name{color:var(--chain);}
+.card-desc{font-size:0.8rem;font-weight:500;color:var(--muted);line-height:1.55;margin-bottom:16px;flex:1;}
+.card-pills{display:flex;gap:7px;flex-wrap:wrap;}
+.cpill{font-size:0.62rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:3px 10px;border-radius:50px;}
+.build-gcard .cpill{background:var(--build-lt);color:var(--build);}
+.chain-gcard .cpill{background:var(--chain-lt);color:var(--chain);}
+
+.hub-note{font-size:0.73rem;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px;padding:9px 16px;background:var(--card);border:1px solid var(--border);border-radius:50px;box-shadow:0 1px 4px var(--shadow);}
+
+/* ===================== SHARED HEADER ===================== */
+.game-header{
+  display:flex;justify-content:space-between;align-items:center;
+  width:100%;max-width:820px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:11px 18px;margin-bottom:12px;
+  box-shadow:0 2px 8px var(--shadow);
+  position:sticky;top:10px;z-index:10;
+}
+.gh-brand{font-family:'Syne',sans-serif;font-size:0.92rem;font-weight:800;display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--muted);}
+.gh-brand:hover{color:var(--text);}
+.bh .gh-brand i{color:var(--build);}
+.ch .gh-brand i{color:var(--chain);}
+.gh-q{font-size:0.78rem;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.gh-score{
+  font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:800;
+  color:var(--yellow);display:flex;align-items:center;gap:6px;
+  padding:4px 14px;background:var(--yellow-lt);border:1px solid rgba(217,119,6,0.2);border-radius:50px;
+}
+
+.prog-wrap{width:100%;max-width:820px;margin-bottom:14px;}
+.prog-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:2px;transition:width 0.5s ease;}
+.b-prog .prog-fill{background:linear-gradient(90deg,var(--build),#38bdf8);}
+.c-prog .prog-fill{background:linear-gradient(90deg,var(--chain),#a78bfa);}
+
+/* ===================== BUILD GAME ===================== */
+#build-game{justify-content:flex-start;padding-top:18px;}
+
+.panel{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:20px 22px;
+  width:100%;max-width:820px;margin-bottom:12px;
+  box-shadow:0 2px 10px var(--shadow);
+  position:relative;
+}
+.panel-stripe{position:absolute;top:0;left:0;right:0;height:2px;border-radius:16px 16px 0 0;}
+.build-stripe{background:linear-gradient(90deg,var(--build),transparent);}
+.chain-stripe{background:linear-gradient(90deg,var(--chain),transparent);}
+
+.sec-lbl{font-size:0.6rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.sl-given{color:var(--build);}
+.sl-hidden{color:var(--orange);}
+.sl-drop{color:var(--green);}
+.sl-bank{color:var(--muted);}
+
+.mode-tag{display:inline-flex;align-items:center;gap:7px;padding:4px 13px;border-radius:50px;font-size:0.67rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;}
+.mt-build{background:var(--build-lt);color:var(--build);border:1px solid rgba(2,132,199,0.2);}
+.mt-chain{background:var(--chain-lt);color:var(--chain);border:1px solid rgba(124,58,237,0.2);}
+
+.shown-box{border-radius:10px;padding:13px 16px;text-align:center;margin-bottom:12px;}
+.s-stmt{background:#f5f3ff;border:1px solid rgba(124,58,237,0.18);}
+.s-plain{background:#f0fdf4;border:1px solid rgba(5,150,105,0.18);}
+.sb-lbl{font-size:0.58rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;justify-content:center;gap:5px;}
+.s-stmt .sb-lbl{color:var(--chain);}
+.s-plain .sb-lbl{color:var(--green);}
+.sb-val{font-family:'Syne',sans-serif;font-size:clamp(1rem,3vw,1.35rem);font-weight:700;letter-spacing:0.02em;}
+.s-stmt .sb-val{color:var(--chain);}
+.s-plain .sb-val{color:var(--green);font-size:clamp(0.88rem,2.5vw,1.05rem);}
+
+.hidden-box{border-radius:10px;padding:13px 16px;text-align:center;margin-bottom:12px;position:relative;overflow:hidden;cursor:pointer;}
+.h-stmt{background:#f5f3ff;border:1.5px dashed rgba(124,58,237,0.3);}
+.h-plain{background:#f0fdf4;border:1.5px dashed rgba(5,150,105,0.3);}
+.hb-lbl{font-size:0.58rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;justify-content:center;gap:5px;}
+.h-stmt .hb-lbl{color:var(--chain);}
+.h-plain .hb-lbl{color:var(--green);}
+.hb-blur{font-family:'Syne',sans-serif;font-size:clamp(1rem,3vw,1.35rem);font-weight:700;filter:blur(9px);user-select:none;transition:filter 0.4s;letter-spacing:0.02em;pointer-events:none;}
+.h-stmt .hb-blur{color:var(--chain);}
+.h-plain .hb-blur{color:var(--green);font-size:clamp(0.88rem,2.5vw,1.05rem);}
+.hb-blur.revealed{filter:blur(0);}
+.rev-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(240,244,255,0.7);border-radius:9px;font-weight:700;font-size:0.75rem;color:var(--muted);gap:7px;backdrop-filter:blur(2px);}
+.rev-ov.gone{display:none;}
+
+.drop-zone{min-height:52px;border:1.5px dashed var(--border2);border-radius:11px;padding:9px;display:flex;flex-wrap:wrap;gap:7px;align-items:center;transition:all 0.2s;background:var(--surface);margin-bottom:12px;}
+.drop-zone.drag-over{border-color:var(--build);background:var(--build-dim);}
+.dz-hint{color:var(--border2);font-weight:600;font-size:0.82rem;margin:auto;}
+
+.tile{padding:7px 13px;border-radius:8px;font-family:'Syne',sans-serif;font-size:0.88rem;font-weight:700;cursor:grab;user-select:none;transition:all 0.15s;border:1px solid transparent;white-space:nowrap;}
+.tile:hover{transform:translateY(-3px);box-shadow:0 4px 12px var(--shadow);}
+.tile:active{cursor:grabbing;transform:scale(0.96);}
+.tile.dragging{opacity:0.3;}
+.tile-quantifier{background:#ede9fe;color:#6d28d9;border-color:#c4b5fd;}
+.tile-predicate{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd;}
+.tile-variable{background:#d1fae5;color:#065f46;border-color:#6ee7b7;}
+.tile-connective{background:#fee2e2;color:#991b1b;border-color:#fca5a5;}
+.tile-domain{background:#fef9c3;color:#854d0e;border-color:#fde047;}
+.tile-symbol{background:#fce7f3;color:#9d174d;border-color:#fbcfe8;}
+.tile-word{background:#dcfce7;color:#14532d;border-color:#86efac;}
+
+.tile-bank-inner{display:flex;flex-wrap:wrap;gap:7px;min-height:32px;}
+.bank-wrap{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:12px;margin-bottom:12px;}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;width:100%;max-width:820px;}
+.leg-i{display:flex;align-items:center;gap:4px;font-size:0.63rem;font-weight:600;color:var(--muted);}
+.leg-d{width:9px;height:9px;border-radius:2px;}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{padding:9px 18px;border-radius:50px;border:none;font-family:'DM Sans',sans-serif;font-size:0.86rem;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:7px;}
+.btn-check{background:var(--green);color:#fff;flex:1;justify-content:center;box-shadow:0 3px 0 #047857;}
+.btn-check:hover{transform:translateY(-2px);box-shadow:0 5px 0 #047857;}
+.btn-check:active{transform:translateY(2px);box-shadow:0 1px 0 #047857;}
+.btn-clear{background:var(--surface);color:var(--muted);border:1px solid var(--border2);}
+.btn-clear:hover{color:var(--text);border-color:var(--muted);}
+.btn-reveal{background:var(--yellow-lt);color:var(--yellow);border:1px solid rgba(217,119,6,0.25);}
+.btn-reveal:hover{background:#fde68a;}
+.btn-try{background:var(--build-lt);color:var(--build);border:1px solid rgba(2,132,199,0.25);flex:1;justify-content:center;}
+.btn-try:hover{background:#bae6fd;}
+.btn-give{background:var(--red-lt);color:var(--red);border:1px solid rgba(220,38,38,0.2);flex:1;justify-content:center;}
+.btn-give:hover{background:#fecaca;}
+.wrong-row{display:none;gap:8px;margin-top:8px;}
+.wrong-row.show{display:flex;}
+
+.feedback{border-radius:11px;padding:12px 16px;margin-bottom:10px;display:none;animation:popin 0.3s ease;}
+.feedback.show{display:block;}
+.feedback.ok{background:var(--green-lt);border:1px solid rgba(5,150,105,0.25);}
+.feedback.bad{background:var(--red-lt);border:1px solid rgba(220,38,38,0.2);}
+@keyframes popin{from{opacity:0;transform:scale(0.97);}to{opacity:1;transform:scale(1);}}
+.fb-head{font-family:'Syne',sans-serif;font-size:0.92rem;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.feedback.ok .fb-head{color:var(--green);}
+.feedback.bad .fb-head{color:var(--red);}
+.fb-body{font-size:0.8rem;font-weight:500;color:#475569;line-height:1.5;}
+
+.btn-next{display:none;width:100%;padding:12px;border:none;border-radius:50px;font-family:'Syne',sans-serif;font-size:0.92rem;font-weight:800;cursor:pointer;margin-top:8px;transition:all 0.2s;justify-content:center;align-items:center;gap:8px;letter-spacing:0.01em;}
+.btn-next.show{display:flex;}
+.btn-next-build{background:linear-gradient(135deg,var(--build),#38bdf8);color:#fff;box-shadow:0 3px 0 #0369a1;}
+.btn-next-build:hover{transform:translateY(-2px);box-shadow:0 5px 16px var(--build-glow);}
+.btn-next-chain{background:linear-gradient(135deg,var(--chain),#a78bfa);color:#fff;box-shadow:0 3px 0 #5b21b6;}
+.btn-next-chain:hover{transform:translateY(-2px);box-shadow:0 5px 16px var(--chain-glow);}
+
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(7px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);}}
+.drop-zone.shake{animation:shake 0.4s ease;}
+.att-badge{display:inline-flex;align-items:center;gap:4px;background:var(--yellow-lt);border:1px solid rgba(217,119,6,0.25);border-radius:50px;padding:1px 9px;font-size:0.67rem;font-weight:700;color:var(--yellow);margin-left:6px;}
+
+/* ===================== BRAIN CHAIN ===================== */
+#chain-game{justify-content:flex-start;padding-top:18px;}
+
+/* Chain visualizer */
+.chain-viz{display:flex;align-items:center;width:100%;max-width:820px;margin-bottom:12px;overflow-x:auto;padding:4px 2px;}
+.cn{width:30px;height:30px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:var(--muted);flex-shrink:0;transition:all 0.3s;font-family:'Syne',sans-serif;background:var(--card);}
+.cn.active{border-color:var(--chain);color:var(--chain);background:var(--chain-lt);box-shadow:0 0 10px var(--chain-glow);}
+.cn.done{border-color:var(--green);color:var(--green);background:var(--green-lt);}
+.cn.broken{border-color:var(--red);color:var(--red);background:var(--red-lt);}
+.cl{height:2px;flex:1;min-width:10px;background:var(--border);transition:background 0.3s;}
+.cl.done{background:var(--green);}
+.cl.broken{background:var(--red);}
+
+/* Flow banner */
+.flow-banner{display:none;align-items:center;justify-content:center;gap:8px;padding:8px 16px;background:var(--chain-lt);border:1px solid rgba(124,58,237,0.18);border-radius:50px;margin-bottom:10px;font-size:0.78rem;font-weight:700;color:var(--chain);width:100%;max-width:820px;}
+.flow-banner.show{display:flex;}
+.flow-val{font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:800;}
+
+/* Streak */
+.streak-bar{display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 16px;border-radius:50px;font-size:0.75rem;font-weight:700;width:fit-content;margin:0 auto 12px;}
+.streak-alive{background:var(--chain-lt);color:var(--chain);border:1px solid rgba(124,58,237,0.2);}
+.streak-broken{background:var(--red-lt);color:var(--red);border:1px solid rgba(220,38,38,0.2);}
+
+/* Chain question */
+.chain-panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 22px;width:100%;max-width:820px;margin-bottom:12px;box-shadow:0 2px 10px var(--shadow);position:relative;}
+.chain-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,var(--chain),transparent);}
+.cq-label{font-size:0.6rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--chain);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.cq-text{font-size:clamp(0.95rem,2.5vw,1.12rem);font-weight:600;color:var(--text);line-height:1.65;margin-bottom:18px;}
+
+/* Options */
+.c-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px;}
+.c-opt{padding:13px 16px;border-radius:11px;background:var(--surface);border:1.5px solid var(--border2);cursor:pointer;transition:all 0.18s;font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;color:var(--muted);text-align:center;user-select:none;}
+.c-opt:hover{border-color:var(--chain);color:var(--chain);background:var(--chain-lt);}
+.c-opt.correct{border-color:var(--green);color:var(--green);background:var(--green-lt);cursor:default;}
+.c-opt.wrong{border-color:var(--red);color:var(--red);background:var(--red-lt);cursor:default;}
+.c-opt.locked{cursor:default;}
+
+/* ===================== RESULTS ===================== */
+#results{justify-content:center;}
+.res-card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:42px 34px;max-width:460px;width:100%;text-align:center;box-shadow:0 4px 24px var(--shadow);position:relative;overflow:hidden;}
+.res-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background-size:200%;animation:shimmer 2s linear infinite;}
+.res-build::before{background:linear-gradient(90deg,var(--build),#38bdf8,var(--build));}
+.res-chain::before{background:linear-gradient(90deg,var(--chain),#a78bfa,var(--chain));}
+@keyframes shimmer{to{background-position:200%;}}
+.res-icon{font-size:3.2rem;margin-bottom:8px;display:block;animation:bob 1s ease infinite alternate;}
+@keyframes bob{from{transform:translateY(0);}to{transform:translateY(-8px);}}
+.res-game-lbl{font-size:0.65rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.res-score{font-family:'Syne',sans-serif;font-size:4.2rem;font-weight:800;line-height:1;margin:10px 0 2px;}
+.res-build .res-score{color:var(--build);}
+.res-chain .res-score{color:var(--chain);}
+.res-score-lbl{font-size:0.68rem;font-weight:700;color:var(--muted);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:20px;}
+.res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+.rg-s{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:12px 8px;}
+.rg-v{font-family:'Syne',sans-serif;font-size:1.45rem;font-weight:800;display:block;}
+.res-build .rg-v{color:var(--build);}
+.res-chain .rg-v{color:var(--chain);}
+.rg-l{font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;}
+.res-msg{font-size:0.84rem;font-weight:500;color:#64748b;margin-bottom:22px;line-height:1.6;}
+.res-btns{display:flex;gap:10px;}
+.btn-replay{flex:1;padding:13px;border:none;border-radius:50px;font-family:'Syne',sans-serif;font-size:0.88rem;font-weight:800;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:7px;color:#fff;}
+.btn-replay-b{background:linear-gradient(135deg,var(--build),#38bdf8);box-shadow:0 3px 0 #0369a1;}
+.btn-replay-b:hover{transform:translateY(-2px);box-shadow:0 5px 16px var(--build-glow);}
+.btn-replay-c{background:linear-gradient(135deg,var(--chain),#a78bfa);box-shadow:0 3px 0 #5b21b6;}
+.btn-replay-c:hover{transform:translateY(-2px);box-shadow:0 5px 16px var(--chain-glow);}
+.btn-hub-res{padding:13px 18px;background:var(--surface);color:var(--muted);border:1px solid var(--border2);border-radius:50px;font-family:'Syne',sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:7px;}
+.btn-hub-res:hover{color:var(--text);border-color:var(--muted);}
+
+.confetti-p{position:fixed;width:9px;height:13px;top:-16px;border-radius:2px;animation:cf linear forwards;pointer-events:none;z-index:999;}
+@keyframes cf{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+</style>
+</head>
+<body>
+
+<!-- ===================== HUB ===================== -->
+<div id="hub" class="screen active">
+  <div class="hub-header">
+    <div class="hub-eyebrow"><i class="fa-solid fa-atom"></i> Predicate Logic &amp; Quantifiers</div>
+    <div class="hub-title"><span class="t1">Logic</span><span class="t2">Quest</span></div>
+    <div class="hub-sub">Two games, one topic. Questions shuffle every single time.</div>
+  </div>
+
+  <div class="game-cards">
+    <div class="game-card build-gcard" onclick="launchBuild()">
+      <div class="card-stripe"></div>
+      <div class="card-icon"><i class="fa-solid fa-puzzle-piece"></i></div>
+      <div class="card-name">Build the Statement</div>
+      <div class="card-desc">Drag and drop logic tiles to form the correct statement or its plain English meaning. Wrong? Try again or reveal.</div>
+      <div class="card-pills">
+        <span class="cpill"><i class="fa-solid fa-layer-group"></i> 10 Rounds</span>
+        <span class="cpill"><i class="fa-solid fa-shuffle"></i> Randomized</span>
+      </div>
+    </div>
+    <div class="game-card chain-gcard" onclick="launchChain()">
+      <div class="card-stripe"></div>
+      <div class="card-icon"><i class="fa-solid fa-link"></i></div>
+      <div class="card-name">Brain Chain</div>
+      <div class="card-desc">Each answer feeds into the next question. Keep the chain alive — one wrong breaks it! How far can the class go?</div>
+      <div class="card-pills">
+        <span class="cpill"><i class="fa-solid fa-layer-group"></i> 10 Rounds</span>
+        <span class="cpill"><i class="fa-solid fa-fire"></i> Chain Mode</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hub-note"><i class="fa-solid fa-shuffle"></i> Order randomizes every time you open this page</div>
+</div>
+
+<!-- ===================== BUILD GAME ===================== -->
+<div id="build-game" class="screen">
+  <div class="game-header bh">
+    <div class="gh-brand" onclick="goHub()"><i class="fa-solid fa-chevron-left"></i> LogicQuest</div>
+    <div class="gh-q"><i class="fa-solid fa-circle-dot"></i> <span id="b-qnum">Q1 / 10</span></div>
+    <div class="gh-score"><i class="fa-solid fa-star"></i> <span id="b-score">0</span></div>
+  </div>
+  <div class="prog-wrap b-prog"><div class="prog-bar"><div class="prog-fill" id="b-prog" style="width:10%"></div></div></div>
+
+  <div class="legend">
+    <div class="leg-i"><div class="leg-d" style="background:#ede9fe"></div>Quantifier</div>
+    <div class="leg-i"><div class="leg-d" style="background:#dbeafe"></div>Predicate</div>
+    <div class="leg-i"><div class="leg-d" style="background:#d1fae5"></div>Variable</div>
+    <div class="leg-i"><div class="leg-d" style="background:#fee2e2"></div>Connective</div>
+    <div class="leg-i"><div class="leg-d" style="background:#fef9c3"></div>Domain</div>
+    <div class="leg-i"><div class="leg-d" style="background:#fce7f3"></div>Symbol</div>
+    <div class="leg-i"><div class="leg-d" style="background:#dcfce7"></div>Word</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-stripe build-stripe"></div>
+    <div id="b-mtag" class="mode-tag mt-build"></div>
+    <div class="sec-lbl sl-given"><i class="fa-solid fa-circle-check"></i> Given to the class</div>
+    <div class="shown-box" id="b-shown"><div class="sb-lbl" id="b-slbl"></div><div class="sb-val" id="b-sval"></div></div>
+    <div class="sec-lbl sl-hidden"><i class="fa-solid fa-eye-slash"></i> Build this (blurred)</div>
+    <div class="hidden-box" id="b-hidden" onclick="bReveal()">
+      <div class="hb-lbl" id="b-hlbl"></div>
+      <div class="hb-blur" id="b-hblur"></div>
+      <div class="rev-ov" id="b-rov"><i class="fa-solid fa-eye"></i> Click to Reveal</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-stripe build-stripe"></div>
+    <div class="sec-lbl sl-drop"><i class="fa-solid fa-inbox"></i> Drop Zone</div>
+    <div class="drop-zone" id="b-dz"><span class="dz-hint">Drag tiles here...</span></div>
+    <div class="feedback" id="b-fb"><div class="fb-head" id="b-fbh"></div><div class="fb-body" id="b-fbb"></div></div>
+    <div class="sec-lbl sl-bank" style="margin-top:2px;"><i class="fa-solid fa-layer-group"></i> Tile Bank</div>
+    <div class="bank-wrap"><div class="tile-bank-inner" id="b-bank"></div></div>
+    <div class="btn-row" id="b-main">
+      <button class="btn btn-clear" onclick="bClear()"><i class="fa-solid fa-rotate-left"></i> Clear</button>
+      <button class="btn btn-reveal" onclick="bReveal()"><i class="fa-solid fa-eye"></i> Reveal</button>
+      <button class="btn btn-check" onclick="bCheck()"><i class="fa-solid fa-circle-check"></i> Check!</button>
+    </div>
+    <div class="wrong-row" id="b-wrong">
+      <button class="btn btn-try" onclick="bTryAgain()"><i class="fa-solid fa-rotate"></i> Try Again</button>
+      <button class="btn btn-give" onclick="bGiveUp()"><i class="fa-solid fa-flag"></i> Give Up &amp; Show Answer</button>
+    </div>
+    <button class="btn-next btn-next-build" id="b-next" onclick="bNext()"><i class="fa-solid fa-arrow-right"></i> Next Question</button>
+  </div>
+</div>
+
+<!-- ===================== BRAIN CHAIN GAME ===================== -->
+<div id="chain-game" class="screen">
+  <div class="game-header ch">
+    <div class="gh-brand" onclick="goHub()"><i class="fa-solid fa-chevron-left"></i> LogicQuest</div>
+    <div class="gh-q"><i class="fa-solid fa-link"></i> <span id="c-qnum">Q1 / 10</span></div>
+    <div class="gh-score"><i class="fa-solid fa-star"></i> <span id="c-score">0</span></div>
+  </div>
+  <div class="prog-wrap c-prog"><div class="prog-bar"><div class="prog-fill" id="c-prog" style="width:10%"></div></div></div>
+
+  <div class="chain-viz" id="chain-viz"></div>
+
+  <div class="flow-banner" id="flow-banner">
+    <i class="fa-solid fa-arrow-right"></i>
+    <span>Previous answer:</span>
+    <span class="flow-val" id="flow-val"></span>
+    <i class="fa-solid fa-arrow-right"></i>
+  </div>
+
+  <div class="streak-bar streak-alive" id="streak-bar">
+    <i class="fa-solid fa-fire"></i> Chain alive: <strong id="streak-num">0</strong> in a row
+  </div>
+
+  <div class="chain-panel">
+    <div class="cq-label"><i class="fa-solid fa-link"></i> Question <span id="c-qlbl">1</span> of 10</div>
+    <div class="cq-text" id="c-qtext">Loading...</div>
+    <div class="c-opts" id="c-opts"></div>
+    <div class="feedback" id="c-fb"><div class="fb-head" id="c-fbh"></div><div class="fb-body" id="c-fbb"></div></div>
+    <button class="btn-next btn-next-chain" id="c-next" onclick="cNext()"><i class="fa-solid fa-arrow-right"></i> Next in Chain</button>
+  </div>
+</div>
+
+<!-- ===================== RESULTS ===================== -->
+<div id="results" class="screen">
+  <div class="res-card" id="res-card">
+    <i class="fa-solid fa-trophy res-icon" id="res-icon" style="color:var(--yellow)"></i>
+    <div class="res-game-lbl" id="res-gamelbl">Build the Statement</div>
+    <div class="res-score" id="res-score">0</div>
+    <div class="res-score-lbl">Total Score</div>
+    <div class="res-grid">
+      <div class="rg-s"><span class="rg-v" id="rg1">0</span><div class="rg-l" id="rg1l">Correct</div></div>
+      <div class="rg-s"><span class="rg-v" id="rg2">10</span><div class="rg-l">Total</div></div>
+      <div class="rg-s"><span class="rg-v" id="rg3">0%</span><div class="rg-l">Accuracy</div></div>
+    </div>
+    <div class="res-msg" id="res-msg"></div>
+    <div class="res-btns">
+      <button class="btn-replay" id="res-replay"><i class="fa-solid fa-rotate"></i> Play Again</button>
+      <button class="btn-hub-res" onclick="goHub()"><i class="fa-solid fa-house"></i> Hub</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+const $ = id => document.getElementById(id);
+const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); window.scrollTo(0,0); }
+function goHub(){ showScreen('hub'); }
+function launchBuild(){ bInit(); showScreen('build-game'); }
+function launchChain(){ cInit(); showScreen('chain-game'); }
+
+// ═══════════════════════════════════════
+// BUILD — DATA POOL (10 questions)
+// ═══════════════════════════════════════
+const BUILD_POOL = [
+  { stmt:'∀x P(x)', plain:'For all x, P(x) is true',
+    bTiles:[{l:'∀x',t:'quantifier'},{l:'P(x)',t:'predicate'},{l:'∃x',t:'quantifier'},{l:'¬P(x)',t:'symbol'},{l:'Q(x)',t:'predicate'}],
+    wTiles:[{l:'For all',t:'word'},{l:'x,',t:'variable'},{l:'P(x)',t:'predicate'},{l:'is true',t:'word'},{l:'there exists',t:'word'},{l:'is false',t:'word'}],
+    aStmt:['∀x','P(x)'], aPlain:['For all','x,','P(x)','is true'],
+    expl:'∀x means "for all x." Every value of x satisfies predicate P.' },
+  { stmt:'∃x P(x)', plain:'There exists an x where P(x) is true',
+    bTiles:[{l:'∃x',t:'quantifier'},{l:'P(x)',t:'predicate'},{l:'∀x',t:'quantifier'},{l:'¬P(x)',t:'symbol'},{l:'Q(x)',t:'predicate'}],
+    wTiles:[{l:'There exists',t:'word'},{l:'an x',t:'variable'},{l:'where',t:'word'},{l:'P(x)',t:'predicate'},{l:'is true',t:'word'},{l:'For all',t:'word'}],
+    aStmt:['∃x','P(x)'], aPlain:['There exists','an x','where','P(x)','is true'],
+    expl:'∃x means "there exists at least one x." At least one value makes P true.' },
+  { stmt:'∃x ¬P(x)', plain:'There exists an x where P(x) is false',
+    bTiles:[{l:'∃x',t:'quantifier'},{l:'¬P(x)',t:'symbol'},{l:'∀x',t:'quantifier'},{l:'P(x)',t:'predicate'},{l:'¬∃x',t:'symbol'}],
+    wTiles:[{l:'There exists',t:'word'},{l:'an x',t:'variable'},{l:'where',t:'word'},{l:'P(x)',t:'predicate'},{l:'is false',t:'word'},{l:'is true',t:'word'}],
+    aStmt:['∃x','¬P(x)'], aPlain:['There exists','an x','where','P(x)','is false'],
+    expl:'¬(∀x P(x)) ≡ ∃x ¬P(x). Not all x satisfy P means some x fails P.' },
+  { stmt:'∀x ¬P(x)', plain:'For all x, P(x) is false',
+    bTiles:[{l:'∀x',t:'quantifier'},{l:'¬P(x)',t:'symbol'},{l:'∃x',t:'quantifier'},{l:'P(x)',t:'predicate'},{l:'¬∀x',t:'symbol'}],
+    wTiles:[{l:'For all',t:'word'},{l:'x,',t:'variable'},{l:'P(x)',t:'predicate'},{l:'is false',t:'word'},{l:'is true',t:'word'}],
+    aStmt:['∀x','¬P(x)'], aPlain:['For all','x,','P(x)','is false'],
+    expl:'¬(∃x P(x)) ≡ ∀x ¬P(x). No x satisfies P means every x fails P.' },
+  { stmt:'∀x (P(x) → Q(x))', plain:'For all x, if P(x) then Q(x)',
+    bTiles:[{l:'∀x',t:'quantifier'},{l:'(P(x)',t:'predicate'},{l:'→',t:'connective'},{l:'Q(x))',t:'predicate'},{l:'∃x',t:'quantifier'},{l:'∧',t:'connective'}],
+    wTiles:[{l:'For all',t:'word'},{l:'x,',t:'variable'},{l:'if',t:'word'},{l:'P(x)',t:'predicate'},{l:'then',t:'word'},{l:'Q(x)',t:'predicate'},{l:'or',t:'word'}],
+    aStmt:['∀x','(P(x)','→','Q(x))'], aPlain:['For all','x,','if','P(x)','then','Q(x)'],
+    expl:'Universal conditional. → means "implies." Whenever P holds, Q must hold.' },
+  { stmt:'∃x ∈ ℤ, P(x)', plain:'There exists an integer x where P(x) is true',
+    bTiles:[{l:'∃x',t:'quantifier'},{l:'∈ ℤ,',t:'domain'},{l:'P(x)',t:'predicate'},{l:'∀x',t:'quantifier'},{l:'∈ ℝ,',t:'domain'},{l:'Q(x)',t:'predicate'}],
+    wTiles:[{l:'There exists',t:'word'},{l:'an integer',t:'domain'},{l:'x',t:'variable'},{l:'where',t:'word'},{l:'P(x)',t:'predicate'},{l:'is true',t:'word'},{l:'a real',t:'domain'}],
+    aStmt:['∃x','∈ ℤ,','P(x)'], aPlain:['There exists','an integer','x','where','P(x)','is true'],
+    expl:'∈ ℤ restricts the domain to integers. At least one integer satisfies P.' },
+  { stmt:'∀x ∈ ℝ (P(x) ∨ Q(x))', plain:'For every real x, P(x) or Q(x) is true',
+    bTiles:[{l:'∀x',t:'quantifier'},{l:'∈ ℝ',t:'domain'},{l:'(P(x)',t:'predicate'},{l:'∨',t:'connective'},{l:'Q(x))',t:'predicate'},{l:'∧',t:'connective'},{l:'∃x',t:'quantifier'}],
+    wTiles:[{l:'For every',t:'word'},{l:'real',t:'domain'},{l:'x,',t:'variable'},{l:'P(x)',t:'predicate'},{l:'or',t:'word'},{l:'Q(x)',t:'predicate'},{l:'is true',t:'word'},{l:'and',t:'word'}],
+    aStmt:['∀x','∈ ℝ','(P(x)','∨','Q(x))'], aPlain:['For every','real','x,','P(x)','or','Q(x)','is true'],
+    expl:'∨ is logical OR. Every real number satisfies at least one of P or Q.' },
+  { stmt:'P(x) ∧ Q(x)', plain:'P(x) and Q(x) are both true',
+    bTiles:[{l:'P(x)',t:'predicate'},{l:'∧',t:'connective'},{l:'Q(x)',t:'predicate'},{l:'∨',t:'connective'},{l:'¬P(x)',t:'symbol'},{l:'→',t:'connective'}],
+    wTiles:[{l:'P(x)',t:'predicate'},{l:'and',t:'word'},{l:'Q(x)',t:'predicate'},{l:'are both',t:'word'},{l:'true',t:'word'},{l:'or',t:'word'},{l:'false',t:'word'}],
+    aStmt:['P(x)','∧','Q(x)'], aPlain:['P(x)','and','Q(x)','are both','true'],
+    expl:'∧ is logical AND. TRUE only when BOTH predicates hold for the same x.' },
+  { stmt:'¬∀x P(x)', plain:'Not all x satisfy P(x)',
+    bTiles:[{l:'¬∀x',t:'symbol'},{l:'P(x)',t:'predicate'},{l:'∃x',t:'quantifier'},{l:'¬P(x)',t:'symbol'},{l:'∀x',t:'quantifier'}],
+    wTiles:[{l:'Not all',t:'word'},{l:'x',t:'variable'},{l:'satisfy',t:'word'},{l:'P(x)',t:'predicate'},{l:'For all',t:'word'},{l:'none',t:'word'}],
+    aStmt:['¬∀x','P(x)'], aPlain:['Not all','x','satisfy','P(x)'],
+    expl:'¬∀x P(x) — "not all x satisfy P" — is equivalent to ∃x ¬P(x).' },
+  { stmt:'∀x (P(x) ∧ Q(x))', plain:'For all x, both P(x) and Q(x) are true',
+    bTiles:[{l:'∀x',t:'quantifier'},{l:'(P(x)',t:'predicate'},{l:'∧',t:'connective'},{l:'Q(x))',t:'predicate'},{l:'∨',t:'connective'},{l:'∃x',t:'quantifier'}],
+    wTiles:[{l:'For all',t:'word'},{l:'x,',t:'variable'},{l:'both',t:'word'},{l:'P(x)',t:'predicate'},{l:'and',t:'word'},{l:'Q(x)',t:'predicate'},{l:'are true',t:'word'},{l:'or',t:'word'}],
+    aStmt:['∀x','(P(x)','∧','Q(x))'], aPlain:['For all','x,','both','P(x)','and','Q(x)','are true'],
+    expl:'∀x (P(x) ∧ Q(x)) — every single x must satisfy BOTH predicates P and Q.' },
+];
+
+// ═══════════════════════════════════════
+// BUILD — STATE & LOGIC
+// ═══════════════════════════════════════
+let bQs=[], bIdx=0, bScore=0, bCorrect=0, bAnswered=false, bRevealed=false, bAttempts=0, bStatShown=true, bCurrent=null, bDrag=null, lastGame='build';
+
+function bInit(){
+  bQs=shuffle(BUILD_POOL); bIdx=0; bScore=0; bCorrect=0; lastGame='build';
+  bLoadQ();
+}
+
+function bLoadQ(){
+  bAnswered=false; bRevealed=false; bAttempts=0;
+  bCurrent=bQs[bIdx];
+  bStatShown=Math.random()<0.5;
+  $('b-qnum').textContent='Q'+(bIdx+1)+' / 10';
+  $('b-prog').style.width=((bIdx+1)/10*100)+'%';
+  $('b-score').textContent=bScore;
+  // mode tag
+  const mt=$('b-mtag');
+  if(bStatShown){ mt.className='mode-tag mt-build'; mt.innerHTML='<i class="fa-solid fa-pen-nib"></i> Build the Plain English'; }
+  else { mt.className='mode-tag mt-chain'; mt.innerHTML='<i class="fa-solid fa-code"></i> Build the Logic Statement'; }
+  // shown box
+  const sb=$('b-shown'), sl=$('b-slbl'), sv=$('b-sval');
+  if(bStatShown){ sb.className='shown-box s-stmt'; sl.innerHTML='<i class="fa-solid fa-code"></i> Logic Statement'; sv.textContent=bCurrent.stmt; }
+  else { sb.className='shown-box s-plain'; sl.innerHTML='<i class="fa-solid fa-comment-dots"></i> Plain English'; sv.textContent=bCurrent.plain; }
+  // hidden box
+  const hb=$('b-hidden'), hl=$('b-hlbl'), hbz=$('b-hblur'), rov=$('b-rov');
+  if(bStatShown){ hb.className='hidden-box h-plain'; hl.innerHTML='<i class="fa-solid fa-comment-dots"></i> Plain English (blurred)'; hbz.textContent=bCurrent.plain; hbz.style.color='var(--green)'; hbz.style.fontSize='clamp(0.88rem,2.5vw,1.05rem)'; }
+  else { hb.className='hidden-box h-stmt'; hl.innerHTML='<i class="fa-solid fa-code"></i> Logic Statement (blurred)'; hbz.textContent=bCurrent.stmt; hbz.style.color='var(--chain)'; hbz.style.fontSize='clamp(1rem,3vw,1.35rem)'; }
+  hbz.classList.remove('revealed'); rov.classList.remove('gone');
+  // reset UI
+  $('b-dz').innerHTML='<span class="dz-hint">Drag tiles here...</span>';
+  $('b-fb').className='feedback';
+  $('b-next').className='btn-next btn-next-build';
+  $('b-main').style.display='';
+  $('b-wrong').className='wrong-row';
+  // tile bank
+  const bank=$('b-bank'); bank.innerHTML='';
+  const tiles=bStatShown?bCurrent.wTiles:bCurrent.bTiles;
+  shuffle([...tiles]).forEach(t=>bank.appendChild(bMakeTile(t,'bank')));
+}
+
+function bReveal(){ if(bRevealed)return; bRevealed=true; $('b-hblur').classList.add('revealed'); $('b-rov').classList.add('gone'); }
+
+function bMakeTile(t,loc){
+  const el=document.createElement('div');
+  el.className='tile tile-'+t.t; el.textContent=t.l;
+  el.dataset.l=t.l; el.dataset.t=t.t; el.draggable=true;
+  el.addEventListener('dragstart',()=>{ bDrag={el,t,loc}; setTimeout(()=>el.classList.add('dragging'),0); });
+  el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+  if(loc==='drop'){
+    el.addEventListener('click',()=>{
+      if(bAnswered)return;
+      el.remove(); $('b-bank').appendChild(bMakeTile(t,'bank'));
+      const dz=$('b-dz'); if(!dz.querySelector('.tile')) dz.innerHTML='<span class="dz-hint">Drag tiles here...</span>';
+    });
+  }
+  return el;
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const dz=$('b-dz');
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+  dz.addEventListener('drop',e=>{
+    e.preventDefault(); dz.classList.remove('drag-over');
+    if(!bDrag||bAnswered||bDrag.loc!=='bank')return;
+    const h=dz.querySelector('.dz-hint'); if(h)h.remove();
+    bDrag.el.remove(); dz.appendChild(bMakeTile(bDrag.t,'drop')); bDrag=null;
+  });
+});
+
+function bClearRetry(){
+  const dz=$('b-dz'),bk=$('b-bank');
+  [...dz.querySelectorAll('.tile')].forEach(el=>{bk.appendChild(bMakeTile({l:el.dataset.l,t:el.dataset.t},'bank'));el.remove();});
+  dz.innerHTML='<span class="dz-hint">Drag tiles here...</span>';
+}
+function bClear(){ if(bAnswered)return; bClearRetry(); }
+
+function bCheck(){
+  if(bAnswered)return;
+  const placed=[...$('b-dz').querySelectorAll('.tile')].map(e=>e.dataset.l);
+  const ans=bStatShown?bCurrent.aPlain:bCurrent.aStmt;
+  if(!placed.length){ bFB(false,'<i class="fa-solid fa-triangle-exclamation"></i> Empty!','Drag tiles first!'); return; }
+  if(JSON.stringify(placed)===JSON.stringify(ans)){
+    bAnswered=true; bScore+=10; bCorrect++;
+    $('b-score').textContent=bScore;
+    bFB(true,'<i class="fa-solid fa-circle-check"></i> Correct! +10 pts',bCurrent.expl);
+    $('b-main').style.display='none'; $('b-wrong').className='wrong-row';
+    $('b-next').classList.add('show'); bReveal();
+  } else {
+    bAttempts++;
+    const dzel=$('b-dz'); dzel.classList.remove('shake'); void dzel.offsetWidth; dzel.classList.add('shake');
+    setTimeout(()=>dzel.classList.remove('shake'),440);
+    bFB(false,'<i class="fa-solid fa-circle-xmark"></i> Wrong! <span class="att-badge"><i class="fa-solid fa-rotate-right"></i> #'+bAttempts+'</span>','Rearrange the tiles and try again, or give up to see the answer.');
+    $('b-main').style.display='none'; $('b-wrong').className='wrong-row show';
+  }
+}
+function bTryAgain(){ bClearRetry(); $('b-fb').className='feedback'; $('b-wrong').className='wrong-row'; $('b-main').style.display=''; }
+function bGiveUp(){
+  bAnswered=true;
+  const ans=bStatShown?bCurrent.aPlain:bCurrent.aStmt;
+  bFB(false,'<i class="fa-solid fa-flag"></i> Answer Revealed — No points','Correct: "'+ans.join(' ')+'" — '+bCurrent.expl);
+  $('b-wrong').className='wrong-row'; $('b-next').classList.add('show'); bReveal();
+}
+function bFB(ok,h,b){ const f=$('b-fb'); f.className='feedback show '+(ok?'ok':'bad'); $('b-fbh').innerHTML=h; $('b-fbb').textContent=b; }
+function bNext(){ bIdx++; if(bIdx>=10){ showResults('build'); return; } bLoadQ(); }
+
+// ═══════════════════════════════════════
+// BRAIN CHAIN — DATA POOL (16 questions, pick 10)
+// ═══════════════════════════════════════
+const CHAIN_POOL = [
+  { q:'A predicate like P(x) becomes a proposition when a specific ___ is substituted for x.',
+    opts:['quantifier','value','domain','symbol'], correct:1,
+    expl:'Substituting a specific value (e.g. x=2) makes P(x) either true or false — a proposition.',
+    next:'value' },
+  { q:'When we write ∀x P(x), the symbol ∀ is called the ___ quantifier.',
+    opts:['existential','domain','universal','logical'], correct:2,
+    expl:'∀ is the universal quantifier — it means "for all" or "for every."',
+    next:'universal' },
+  { q:'The universal quantifier ∀x P(x) is FALSE if ___ one x makes P(x) false.',
+    opts:['every','no','at least','exactly'], correct:2,
+    expl:'A single counterexample (at least one x where P fails) is enough to make ∀x P(x) false.',
+    next:'at least one' },
+  { q:'"At least one x" describes the ___ quantifier.',
+    opts:['universal','existential','negation','domain'], correct:1,
+    expl:'∃x means "there exists at least one x" — the existential quantifier.',
+    next:'existential' },
+  { q:'The existential quantifier is written using the symbol ___.',
+    opts:['∀','¬','∈','∃'], correct:3,
+    expl:'∃ is a rotated E standing for "there exists."',
+    next:'∃' },
+  { q:'The negation of ∀x P(x) is ___.',
+    opts:['∀x ¬P(x)','¬∃x P(x)','∃x ¬P(x)','∃x P(x)'], correct:2,
+    expl:'¬(∀x P(x)) ≡ ∃x ¬P(x). "Not all" becomes "there exists one that does not."',
+    next:'∃x ¬P(x)' },
+  { q:'∃x ¬P(x) means there ___ an x where P(x) is false.',
+    opts:['is never','are all','exists','is always'], correct:2,
+    expl:'∃x ¬P(x) reads: "there exists an x such that P(x) is NOT true."',
+    next:'exists' },
+  { q:'The negation of ∃x P(x) is ___.',
+    opts:['∃x ¬P(x)','∀x P(x)','∀x ¬P(x)','¬∀x ¬P(x)'], correct:2,
+    expl:'¬(∃x P(x)) ≡ ∀x ¬P(x). "None exist satisfying P" means "all x fail P."',
+    next:'∀x ¬P(x)' },
+  { q:'∀x ¬P(x) means P(x) is false for ___ values of x.',
+    opts:['some','no','all','most'], correct:2,
+    expl:'∀x ¬P(x) says the negation holds universally — P is false for every x.',
+    next:'all' },
+  { q:'P(x) ∧ Q(x) is TRUE only when ___ predicates hold.',
+    opts:['neither','at least one','both','exactly one'], correct:2,
+    expl:'∧ is logical AND — requires both P(x) and Q(x) to be simultaneously true.',
+    next:'both' },
+  { q:'When both P(x) and Q(x) must hold together, we use the ___ connective.',
+    opts:['disjunction','implication','conjunction','negation'], correct:2,
+    expl:'∧ represents conjunction — both conditions must be satisfied.',
+    next:'conjunction' },
+  { q:'P(x) ∨ Q(x) is the ___ of P and Q.',
+    opts:['conjunction','negation','disjunction','implication'], correct:2,
+    expl:'∨ is logical OR (disjunction). TRUE if at least one of P or Q holds.',
+    next:'disjunction' },
+  { q:'The notation ∈ ℤ in ∃x ∈ ℤ restricts x to the ___ of integers.',
+    opts:['range','predicate','domain','quantifier'], correct:2,
+    expl:'∈ ℤ specifies the domain — the set of values x is drawn from.',
+    next:'domain' },
+  { q:'The domain determines the ___ of values x is allowed to take.',
+    opts:['truth','set','predicate','syntax'], correct:1,
+    expl:'The domain is a set. For ∈ ℝ the domain is all real numbers.',
+    next:'set' },
+  { q:'Syntax in predicate logic determines which ___ of symbols are valid.',
+    opts:['meanings','truths','combinations','domains'], correct:2,
+    expl:'Syntax defines legal structure — the rules for forming valid expressions.',
+    next:'combinations' },
+  { q:'Semantics gives the ___ behind valid logical expressions.',
+    opts:['structure','syntax','meaning','domain'], correct:2,
+    expl:'Semantics = meaning. Syntax checks form; semantics checks what it actually says.',
+    next:'meaning' },
+];
+
+// ═══════════════════════════════════════
+// BRAIN CHAIN — STATE & LOGIC
+// ═══════════════════════════════════════
+let cQs=[], cIdx=0, cScore=0, cCorrect=0, cStreak=0, cBroken=false, cAnswered=false;
+
+function cInit(){
+  // Pick 10 random questions from pool — freshly shuffled every game
+  cQs = shuffle(CHAIN_POOL).slice(0,10);
+  cIdx=0; cScore=0; cCorrect=0; cStreak=0; cBroken=false;
+  lastGame='chain';
+  // Build chain visualizer
+  const viz=$('chain-viz'); viz.innerHTML='';
+  for(let i=0;i<10;i++){
+    const n=document.createElement('div'); n.className='cn'; n.id='cn'+i; n.textContent=i+1; viz.appendChild(n);
+    if(i<9){ const l=document.createElement('div'); l.className='cl'; l.id='cl'+i; viz.appendChild(l); }
+  }
+  cLoadQ();
+}
+
+function cLoadQ(){
+  // Reset answered flag FIRST
+  cAnswered=false;
+
+  const i=cIdx;
+  const q=cQs[i];
+
+  // Header
+  $('c-qnum').textContent='Q'+(i+1)+' / 10';
+  $('c-prog').style.width=((i+1)/10*100)+'%';
+  $('c-score').textContent=cScore;
+  $('c-qlbl').textContent=i+1;
+
+  // Update chain nodes
+  for(let k=0;k<10;k++){
+    const n=$('cn'+k); if(!n)continue;
+    n.className='cn';
+    if(k<i) n.classList.add('done');
+    else if(k===i) n.classList.add('active');
+    if(k<9){ const l=$('cl'+k); if(l){ l.className='cl'; if(k<i) l.classList.add('done'); } }
+  }
+
+  // Flow banner — show previous answer
+  const fb=$('flow-banner');
+  if(i>0){ fb.className='flow-banner show'; $('flow-val').textContent=cQs[i-1].next; }
+  else fb.className='flow-banner';
+
+  // Streak bar
+  const sb=$('streak-bar');
+  if(cBroken){
+    sb.className='streak-bar streak-broken';
+    sb.innerHTML='<i class="fa-solid fa-link-slash"></i> Chain broken — rebuilding...';
+  } else {
+    sb.className='streak-bar streak-alive';
+    sb.innerHTML='<i class="fa-solid fa-fire"></i> Chain alive: <strong>'+cStreak+'</strong> in a row';
+  }
+
+  // Question text
+  $('c-qtext').textContent=q.q;
+
+  // Options — fully rebuild with fresh elements every time
+  const optsEl=$('c-opts');
+  optsEl.innerHTML='';
+  const order=shuffle([0,1,2,3]);
+  order.forEach(function(oi){
+    const btn=document.createElement('div');
+    btn.className='c-opt';
+    btn.textContent=q.opts[oi];
+    // Store both indices on the element itself
+    btn.dataset.oi=oi;
+    btn.dataset.qi=i;
+    btn.addEventListener('click', function(){
+      // Reject if answered or stale question
+      if(cAnswered) return;
+      if(parseInt(this.dataset.qi)!==cIdx) return;
+      cAnswer(parseInt(this.dataset.oi));
+    });
+    optsEl.appendChild(btn);
+  });
+
+  // Reset feedback + next btn
+  $('c-fb').className='feedback';
+  $('c-fbh').innerHTML='';
+  $('c-fbb').textContent='';
+  $('c-next').className='btn-next btn-next-chain';
+}
+
+function cAnswer(oi){
+  if(cAnswered) return;
+  cAnswered=true;
+
+  const i=cIdx;
+  const q=cQs[i];
+  const correct=(oi===q.correct);
+
+  // Lock all options visually
+  [...$('c-opts').querySelectorAll('.c-opt')].forEach(btn=>{
+    btn.classList.add('locked');
+    const boi=parseInt(btn.dataset.oi);
+    if(boi===q.correct) btn.classList.add('correct');
+    else if(boi===oi&&!correct) btn.classList.add('wrong');
+  });
+
+  if(correct){
+    cScore+=10; cCorrect++; cStreak++; cBroken=false;
+    $('c-score').textContent=cScore;
+    // Mark node done
+    const n=$('cn'+i); if(n){n.classList.remove('active');n.classList.add('done');}
+    if(i<9){const l=$('cl'+i);if(l)l.classList.add('done');}
+    cFB(true,'<i class="fa-solid fa-circle-check"></i> Correct! +10 pts',q.expl);
+  } else {
+    cStreak=0; cBroken=true;
+    const n=$('cn'+i); if(n){n.classList.remove('active');n.classList.add('broken');}
+    if(i<9){const l=$('cl'+i);if(l)l.classList.add('broken');}
+    cFB(false,'<i class="fa-solid fa-link-slash"></i> Chain broken! — No points','Correct answer: "'+q.opts[q.correct]+'" — '+q.expl);
+  }
+
+  $('c-next').classList.add('show');
+}
+
+function cFB(ok,h,b){ const f=$('c-fb'); f.className='feedback show '+(ok?'ok':'bad'); $('c-fbh').innerHTML=h; $('c-fbb').textContent=b; }
+
+function cNext(){
+  cIdx++;
+  if(cIdx>=10){ showResults('chain'); return; }
+  cLoadQ();
+}
+
+// ═══════════════════════════════════════
+// RESULTS
+// ═══════════════════════════════════════
+function showResults(game){
+  showScreen('results');
+  const isB=game==='build';
+  const score=isB?bScore:cScore;
+  const correct=isB?bCorrect:cCorrect;
+  const pct=Math.round(correct/10*100);
+  const card=$('res-card');
+  card.className='res-card '+(isB?'res-build':'res-chain');
+  $('res-gamelbl').textContent=isB?'Build the Statement':'Brain Chain';
+  $('res-score').textContent=score;
+  $('rg1').textContent=correct;
+  $('rg1l').textContent=isB?'Correct':'Chain Links';
+  $('rg2').textContent=10;
+  $('rg3').textContent=pct+'%';
+  const icon=$('res-icon'), replay=$('res-replay');
+  replay.className='btn-replay '+(isB?'btn-replay-b':'btn-replay-c');
+  replay.onclick=()=>isB?launchBuild():launchChain();
+  let msg;
+  if(pct===100){ icon.className='fa-solid fa-trophy res-icon'; icon.style.color='var(--yellow)'; msg='PERFECT! Flawless — the class has completely mastered this topic!'; }
+  else if(pct>=80){ icon.className='fa-solid fa-medal res-icon'; icon.style.color='var(--green)'; msg='Excellent! Strong understanding across the board. Well done!'; }
+  else if(pct>=60){ icon.className='fa-solid fa-star res-icon'; icon.style.color='var(--build)'; msg='Good effort! A few gaps to review — especially quantifier negation rules.'; }
+  else { icon.className='fa-solid fa-book-open res-icon'; icon.style.color='var(--chain)'; msg='Keep practicing! Focus on ∀, ∃, their negations, and predicate meanings.'; }
+  $('res-msg').textContent=msg;
+  if(pct>=70) doConfetti();
+}
+
+function doConfetti(){
+  const cols=['#0284c7','#7c3aed','#059669','#d97706','#ea580c','#dc2626'];
+  for(let i=0;i<70;i++){
+    const c=document.createElement('div'); c.className='confetti-p';
+    c.style.left=Math.random()*100+'vw';
+    c.style.background=cols[Math.floor(Math.random()*cols.length)];
+    c.style.animationDuration=(1.5+Math.random()*2.5)+'s';
+    c.style.animationDelay=(Math.random()*1.2)+'s';
+    c.style.transform='rotate('+Math.random()*360+'deg)';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),5000);
+  }
+}
+</script>
+</body>
+</html>
